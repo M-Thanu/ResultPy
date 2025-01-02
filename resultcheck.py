@@ -3,21 +3,6 @@ import pandas as pd
 import fitz  # PyMuPDF
 import re
 
-# Define the descending order of grades
-grade_order = {
-    "A+": 1,
-    "A": 2,
-    "A-": 3,
-    "B+": 4,
-    "B": 5,
-    "B-": 6,
-    "C+": 7,
-    "C": 8,
-    "C-": 9,
-    "D": 10,
-    "I": 11,
-}
-
 def extract_results(pdf_file, index_df):
     # Read PDF content
     doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
@@ -30,19 +15,28 @@ def extract_results(pdf_file, index_df):
     #st.text(pdf_text)
 
     # Extract index numbers and grades
-    results_pattern = r"([A-Za-z0-9]+)\s+([A\+|A|A\-|B\+|B|B\-|C\+|C|C\-|D|I])"
+    # Updated regex to handle grades explicitly with proper patterns
+    results_pattern = r"([A-Za-z0-9]+)\s+(A\+|A\-|A|B\+|B\-|B|C\+|C\-|C|D|I)"
     matches = re.findall(results_pattern, pdf_text)
 
     if not matches:
         st.error("No results found in the PDF. Check the format and regex pattern.")
         return pd.DataFrame()
 
+    # Custom grade sorting order
+    grade_order = {
+        "A+": 1, "A": 2, "A-": 3,
+        "B+": 4, "B": 5, "B-": 6,
+        "C+": 7, "C": 8, "C-": 9,
+        "D": 10, "I": 11
+    }
+
     # Map results to names
     results = []
     for index, grade in matches:
         name = index_df.loc[index_df['IndexNumber'] == index, 'Name'].values
         if len(name) == 0:
-            # Skip unknown results by continuing to the next iteration
+            # Skip unknown results
             continue
         else:
             name = name[0]
@@ -54,12 +48,10 @@ def extract_results(pdf_file, index_df):
         st.warning("No valid results matched the index numbers in the database.")
         return results_df
 
+    # Apply the custom sort order for grades
     results_df["GradeOrder"] = results_df["Result"].map(grade_order)
     results_df = results_df.sort_values(by="GradeOrder").drop(columns=["GradeOrder"])
     return results_df
-
-
-
 
 # Streamlit app
 def main():
