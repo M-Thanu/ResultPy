@@ -29,23 +29,70 @@ def chatbot():
     # Will implement later
 
 # -----------------------------
-# Homepage with Horizontal Cards
+# Homepage with Stylish Cards
 def main():
+    st.markdown("""
+        <style>
+        body {
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+        }
+        .feature-card button {
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .view-grades { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .gpa-calc { background: linear-gradient(135deg, #f7971e, #ffd200); }
+        .profile { background: linear-gradient(135deg, #43cea2, #185a9d); }
+        .chatbot { background: linear-gradient(135deg, #fc466b, #3f5efb); }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.title("🎓 Student Result System")
+    st.write("### Select a Feature")
 
     # Session state to keep track of selected feature
     if 'selected_feature' not in st.session_state:
         st.session_state.selected_feature = None
 
-    st.write("### Select a Feature")
-    cols = st.columns(4)
+    # Define features with CSS classes
+    features = {
+        "View Grades": ("view-grades", "📄"),
+        "GPA Calculator": ("gpa-calc", "📊"),
+        "Personalized Profile": ("profile", "👤"),
+        "Chatbot": ("chatbot", "🤖"),
+    }
 
-    features = ["View Grades", "GPA Calculator", "Personalized Profile", "Chatbot"]
-    icons = ["📄", "📊", "👤", "🤖"]
+    # Render feature cards as styled buttons
+    for feature, (css_class, icon) in features.items():
+        if st.markdown(
+            f"""
+            <div class="feature-card">
+                <form action="?feature={feature}" method="get">
+                    <button class="{css_class}" type="submit">{icon} {feature}</button>
+                </form>
+            </div>
+            """,
+            unsafe_allow_html=True
+        ):
+            pass
 
-    for i, col in enumerate(cols):
-        if col.button(f"{icons[i]} {features[i]}", key=f"card_{i}"):
-            st.session_state.selected_feature = features[i]
+    # Detect selected feature from query params
+    query_params = st.experimental_get_query_params()
+    if "feature" in query_params:
+        st.session_state.selected_feature = query_params["feature"][0]
 
     # Display selected feature
     if st.session_state.selected_feature == "View Grades":
@@ -57,7 +104,7 @@ def main():
     elif st.session_state.selected_feature == "Chatbot":
         chatbot()
     else:
-        st.write("Click on a card above to select a feature.")
+        st.info("Click on a card above to select a feature.")
 
 if __name__ == "__main__":
     main()
